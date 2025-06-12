@@ -18,12 +18,19 @@ st.markdown("""
 st.header('📤 데이터 업로드')
 uploaded_file = st.file_uploader("여기에 CSV 파일을 업로드해주세요.", type=['csv'])
 
+# 인코딩 선택 옵션 추가
+encoding_option = st.selectbox(
+    "CSV 파일의 인코딩을 선택해주세요:",
+    ('utf-8', 'cp949', 'euc-kr'),
+    index=1 # 기본값으로 cp949 선택 (한국어 CSV 파일에 흔히 사용됨)
+)
+
 df = None # df를 초기화
 
 if uploaded_file is not None:
     try:
-        # 업로드된 CSV 파일을 DataFrame으로 읽어옵니다.
-        df = pd.read_csv(uploaded_file)
+        # 업로드된 CSV 파일을 DataFrame으로 읽어옵니다. 선택된 인코딩 사용
+        df = pd.read_csv(uploaded_file, encoding=encoding_option)
 
         # 필요한 컬럼이 있는지 확인합니다.
         required_columns = ['상권명', '길단위인구수', '치킨전문점수']
@@ -39,8 +46,13 @@ if uploaded_file is not None:
                     break # 더 이상 진행하지 않고 중단
 
             # 컬럼 이름을 명확하게 변경 (선택 사항이지만 일관성을 위해)
+            # CSV 파일에 따라 컬럼명이 정확히 일치하지 않을 수 있으므로, 대소문자 무시하고 매칭하는 로직을 추가할 수 있습니다.
+            # 여기서는 사용자에게 정확한 컬럼명을 요구합니다.
             df.columns = ['상권명', '길단위인구수', '치킨전문점수']
 
+    except UnicodeDecodeError:
+        st.error(f"선택하신 인코딩 '{encoding_option}'으로는 파일을 읽을 수 없습니다. 다른 인코딩을 시도해보세요 (예: 'euc-kr', 'cp949').")
+        df = None
     except Exception as e:
         st.error(f"파일을 읽는 도중 오류가 발생했습니다: {e}")
         df = None
