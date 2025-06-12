@@ -131,7 +131,11 @@ st.markdown("""
 
 # 사이드바에 데이터 로드 섹션 생성
 st.sidebar.header('데이터 로드 (GitHub URL)')
-st.sidebar.markdown("GitHub Raw 파일 URL을 입력해주세요. (예: `https://raw.githubusercontent.com/사용자명/저장소명/브랜치명/파일경로/파일이름.csv`)")
+st.sidebar.markdown("""
+**GitHub Raw 파일 URL**을 입력해주세요. 
+(예: `https://raw.githubusercontent.com/사용자명/저장소명/브랜치명/파일경로/파일이름.csv`)
+**'사용자명', '저장소명', '브랜치명', '파일경로'를 사용자님의 GitHub 정보로 변경해야 합니다.**
+""")
 
 
 # 1. 점포-행정동 데이터 URL 입력 섹션
