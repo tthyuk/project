@@ -8,8 +8,8 @@ import json
 # --- 파일 로드 ---
 @st.cache_data
 def load_data():
-    shop_df = pd.read_csv("서울시_점포.csv", encoding='cp949')
-    pop_df = pd.read_csv("서울시_인구.csv", encoding='cp949')
+    shop_df = pd.read_csv("서울시_점포.csv", encoding='euc-kr')
+    pop_df = pd.read_csv("서울시_인구.csv", encoding='euc-kr')
     with open("서울시_행정동_중심좌표.json", encoding='utf-8') as f:
         geo_data = json.load(f)
     return shop_df, pop_df, geo_data
