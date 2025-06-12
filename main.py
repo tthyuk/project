@@ -2,195 +2,185 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# --- Streamlit 앱 설정 ---
-# 페이지 레이아웃을 'wide'로 설정하여 더 넓은 화면을 사용합니다.
-st.set_page_config(layout="wide", page_title="상권 분석 앱")
+# --- 1. 데이터 로드 (가상의 데이터 생성 또는 실제 파일 로드) ---
 
-st.title('🍗 상권별 길단위인구수 및 치킨전문점 비교 및 분석 시각화')
-st.markdown("""
-이 앱은 사용자가 직접 업로드한 데이터를 기반으로 대한민국 주요 상권의 **길단위인구수 (유동인구)** 와 **치킨전문점 수**를 시각화하고 비교, 분석합니다.
-이를 통해 특정 상권의 특성을 파악하고, 유동인구와 특정 업종 간의 관계를 직관적으로 이해할 수 있습니다.
+@st.cache_data
+def load_data():
+    # 실제 파일 경로로 변경해주세요.
+    # df_store = pd.read_csv('점포-상권.csv')
+    # df_population = pd.read_csv('길단위인구-상권.csv')
 
-**데이터 업로드**: `상권명`, `길단위인구수`, `치킨전문점수` 컬럼을 포함하는 CSV 파일을 업로드해주세요. 여러 파일을 동시에 업로드할 수 있습니다.
-""")
+    # 데이터셋 구조를 바탕으로 가상의 데이터 생성
+    # 점포-상권 데이터 (image_8a0c4f.png 기반)
+    data_store = {
+        '기준년분기명': ['2023_1', '2023_1', '2023_1', '2023_1', '2023_2', '2023_2'],
+        '상권구분코드': ['A', 'A', 'B', 'B', 'A', 'B'],
+        '상권구분코드명': ['골목상권', '골목상권', '발달상권', '발달상권', '골목상권', '발달상권'],
+        '상권코드': [1001, 1001, 2001, 2001, 1001, 2001],
+        '상권코드명': ['강남역', '강남역', '홍대입구', '홍대입구', '강남역', '홍대입구'],
+        '서비스업종코드': ['F01', 'F02', 'F01', 'F03', 'F01', 'F01'],
+        '서비스업종코드명': ['치킨', '한식', '치킨', '카페', '치킨', '치킨'],
+        '점포수': [10, 50, 15, 30, 12, 18],
+        '유사_업종_점포_수': [15, 60, 20, 35, 18, 22],
+        '개업_율': [0.05, 0.03, 0.07, 0.02, 0.06, 0.04],
+        '개업_점포_수': [1, 2, 1, 1, 1, 1],
+        '폐업_율': [0.02, 0.01, 0.03, 0.01, 0.01, 0.02],
+        '폐업_점포_수': [0, 0, 0, 0, 0, 0],
+        '프랜차이즈_점포_수': [7, 20, 10, 15, 8, 12]
+    }
+    df_store = pd.DataFrame(data_store)
 
-# --- 데이터 업로드 섹션 ---
-st.header('📤 데이터 업로드')
-# 여러 파일 업로드 가능하도록 변경
-uploaded_files = st.file_uploader("여기에 CSV 파일을 업로드해주세요.", type=['csv'], accept_multiple_files=True)
+    # 길단위인구-상권 데이터 (image_8a0c32.png 기반)
+    data_population = {
+        '기준년분기명': ['2023_1', '2023_1', '2023_2', '2023_2'],
+        '상권구분코드': ['A', 'B', 'A', 'B'],
+        '상권구분코드명': ['골목상권', '발달상권', '골목상권', '발달상권'],
+        '상권코드': [1001, 2001, 1001, 2001],
+        '상권코드명': ['강남역', '홍대입구', '강남역', '홍대입구'],
+        '총_유동인구_수': [10000, 15000, 11000, 16000],
+        '시간대_1_유동인구_수': [500, 800, 550, 850], # 가정: 00-06시
+        '시간대_2_유동인구_수': [1000, 1500, 1100, 1600], # 가정: 06-12시
+        '시간대_3_유동인구_수': [2000, 3000, 2200, 3300], # 가정: 12-18시
+        '시간대_4_유동인구_수': [3000, 4500, 3300, 4800], # 가정: 18-24시
+        '시간대_5_유동인구_수': [1500, 2000, 1600, 2100],
+        '시간대_6_유동인구_수': [1000, 1200, 1100, 1300],
+        '시간대_7_유동인구_수': [500, 700, 550, 750],
+        '시간대_8_유동인구_수': [300, 400, 330, 440],
+        '시간대_9_유동인구_수': [100, 200, 110, 220],
+        '시간대_10_유동인구_수': [50, 100, 55, 110],
+        '남성_유동인구_수': [5000, 8000, 5500, 8500],
+        '여성_유동인구_수': [5000, 7000, 5500, 7500],
+        '연령대_10_유동인구_수': [500, 1000, 550, 1100],
+        '연령대_20_유동인구_수': [2000, 3000, 2200, 3300],
+        '연령대_30_유동인구_수': [3000, 4000, 3300, 4400],
+        '연령대_40_유동인구_수': [2500, 3500, 2700, 3700],
+        '연령대_50_유동인구_수': [1000, 2000, 1100, 2200],
+        '연령대_60_유동인구_수': [500, 1000, 550, 1100],
+        '연령대_70_이상_유동인구_수': [500, 500, 500, 500],
+        '월요일_유동인구_수': [1500, 2000, 1600, 2100],
+        '화요일_유동인구_수': [1600, 2100, 1700, 2200],
+        '수요일_유동인구_수': [1700, 2200, 1800, 2300],
+        '목요일_유동인구_수': [1800, 2300, 1900, 2400],
+        '금요일_유동인구_수': [2000, 3000, 2100, 3100],
+        '토요일_유동인구_수': [1000, 1500, 1100, 1600],
+        '일요일_유동인구_수': [400, 700, 440, 770],
+        '봄_유동인구_수': [2500, 3000, 2700, 3300],
+        '여름_유동인구_수': [3000, 4000, 3300, 4400],
+        '가을_유동인구_수': [2500, 3500, 2700, 3700],
+        '겨울_유동인구_수': [2000, 2500, 2200, 2700]
+    }
+    df_population = pd.DataFrame(data_population)
 
-# 인코딩 선택 옵션 추가
-encoding_option = st.selectbox(
-    "CSV 파일의 인코딩을 선택해주세요:",
-    ('utf-8', 'cp949', 'euc-kr'),
-    index=1 # 기본값으로 cp949 선택 (한국어 CSV 파일에 흔히 사용됨)
+    return df_store, df_population
+
+df_store, df_population = load_data()
+
+# --- 2. 데이터 전처리 ---
+
+# 치킨 점포 데이터 필터링
+df_chicken_stores = df_store[df_store['서비스업종코드명'] == '치킨'].copy()
+
+# 상권 정보 기준으로 두 데이터셋 조인
+# 기준년분기명, 상권구분코드, 상권코드 기준으로 조인
+df_merged = pd.merge(
+    df_chicken_stores,
+    df_population,
+    on=['기준년분기명', '상권구분코드', '상권코드', '상권구분코드명', '상권코드명'],
+    how='inner'
 )
 
-all_dfs = [] # 모든 유효한 DataFrame을 저장할 리스트
+# 시간대별 유동인구 컬럼 식별
+time_columns = [col for col in df_merged.columns if '시간대_' in col and '_유동인구_수' in col]
 
-if uploaded_files:
-    for uploaded_file in uploaded_files:
-        try:
-            # 파일 이름으로 데이터셋 출처를 기록
-            source_name = uploaded_file.name
-            
-            # 업로드된 CSV 파일을 DataFrame으로 읽어옵니다. 선택된 인코딩 사용
-            current_df = pd.read_csv(uploaded_file, encoding=encoding_option)
+# 시간대별 유동인구 당 점포수 비율 계산
+# 0으로 나누는 오류 방지를 위해 작은 값(epsilon) 추가
+epsilon = 1e-6
+for col in time_columns:
+    df_merged[f'점포수_대비_{col}_비율'] = df_merged['점포수'] / (df_merged[col] + epsilon)
 
-            # 필요한 컬럼이 있는지 확인합니다.
-            required_columns = ['상권명', '길단위인구수', '치킨전문점수']
-            if not all(col in current_df.columns for col in required_columns):
-                st.error(f"'{source_name}' 파일에 필요한 컬럼이 부족합니다. 다음 컬럼들이 포함되어야 합니다: {', '.join(required_columns)}")
-                continue # 다음 파일로 넘어감
-            else:
-                # 길단위인구수와 치킨전문점수가 숫자인지 확인하고, 아니라면 오류 메시지를 표시합니다.
-                numeric_check_failed = False
-                for col in ['길단위인구수', '치킨전문점수']:
-                    if not pd.api.types.is_numeric_dtype(current_df[col]):
-                        st.error(f"'{source_name}' 파일의 '{col}' 컬럼은 숫자 형식이어야 합니다. 데이터를 확인해주세요.")
-                        numeric_check_failed = True
-                        break
-                if numeric_check_failed:
-                    continue # 다음 파일로 넘어감
+# --- 3. 스트림릿 UI 구성 ---
 
-                # 컬럼 이름이 정확하도록 설정 (대소문자 구분 없이 매칭하도록 개선 가능하지만 여기서는 정확한 이름 요구)
-                current_df = current_df[required_columns] # 순서도 맞춤
-                current_df.columns = ['상권명', '길단위인구수', '치킨전문점수']
+st.set_page_config(layout="wide")
+st.title('🍗 상권별 치킨 점포수 및 유동인구 분석')
 
-                # 데이터셋 출처 컬럼 추가
-                current_df['데이터셋 출처'] = source_name
-                all_dfs.append(current_df)
+# 사이드바 설정
+st.sidebar.header('상권 선택')
 
-        except UnicodeDecodeError:
-            st.error(f"'{uploaded_file.name}' 파일은 선택하신 인코딩 '{encoding_option}'으로는 읽을 수 없습니다. 다른 인코딩을 시도해보세요 (예: 'euc-kr', 'cp949').")
-        except Exception as e:
-            st.error(f"'{uploaded_file.name}' 파일을 읽는 도중 오류가 발생했습니다: {e}")
+# 고유한 상권 구분을 가져옵니다.
+unique_quarters = df_merged['기준년분기명'].unique()
+selected_quarter = st.sidebar.selectbox('기준 년분기 선택', unique_quarters)
 
-    if all_dfs:
-        df = pd.concat(all_dfs, ignore_index=True)
+# 선택된 년분기에 해당하는 상권 구분 코드명만 필터링
+filtered_by_quarter = df_merged[df_merged['기준년분기명'] == selected_quarter]
+unique_trade_areas = filtered_by_quarter['상권구분코드명'].unique()
+selected_trade_area = st.sidebar.selectbox('상권 구분 코드명 선택', unique_trade_areas)
+
+# 선택된 상권 코드명만 필터링
+filtered_by_trade_area = filtered_by_quarter[filtered_by_quarter['상권구분코드명'] == selected_trade_area]
+unique_market_names = filtered_by_trade_area['상권코드명'].unique()
+selected_market_name = st.sidebar.selectbox('상권 코드명 선택', unique_market_names)
+
+# 최종 필터링된 데이터
+final_filtered_df = df_merged[
+    (df_merged['기준년분기명'] == selected_quarter) &
+    (df_merged['상권구분코드명'] == selected_trade_area) &
+    (df_merged['상권코드명'] == selected_market_name)
+]
+
+if not final_filtered_df.empty:
+    st.subheader(f'{selected_quarter} - {selected_trade_area} - {selected_market_name} 상권 분석 결과')
+
+    # 치킨 점포수 정보
+    total_chicken_stores = final_filtered_df['점포수'].sum()
+    st.write(f"해당 상권의 치킨 점포수: **{int(total_chicken_stores)}개**")
+
+    # 시간대별 유동인구 당 점포수 비율 시각화
+    st.subheader('시간대별 길단위인구 당 치킨 점포수 비율')
+
+    # 시각화를 위한 데이터 준비
+    plot_data = pd.DataFrame(columns=['시간대', '비율'])
+    for col in time_columns:
+        ratio_col_name = f'점포수_대비_{col}_비율'
+        if ratio_col_name in final_filtered_df.columns:
+            # 해당 시간대 컬럼의 '시간대_X_' 부분을 제거하고 '시간대 X'로 변환
+            time_label = col.replace('_유동인구_수', '').replace('_', ' ')
+            plot_data = pd.concat([plot_data, pd.DataFrame({'시간대': [time_label], '비율': [final_filtered_df[ratio_col_name].iloc[0]]})], ignore_index=True)
+
+
+    if not plot_data.empty:
+        fig = px.line(
+            plot_data,
+            x='시간대',
+            y='비율',
+            title=f'{selected_market_name} 상권 시간대별 유동인구 당 치킨 점포수 비율',
+            labels={'비율': '점포수 / 유동인구 수', '시간대': '시간대 구분'},
+            markers=True # 마커 추가
+        )
+        fig.update_xaxes(categoryorder='array', categoryarray=plot_data['시간대'].tolist()) # 시간대 순서 정렬
+        st.plotly_chart(fig, use_container_width=True)
     else:
-        df = None # 유효한 파일이 없으면 df는 None
-        st.warning("업로드된 모든 파일에 문제가 있어 데이터를 로드할 수 없습니다. 파일을 확인해주세요.")
+        st.warning("선택된 상권의 시간대별 유동인구 데이터가 부족하여 비율을 시각화할 수 없습니다.")
+
+    st.subheader('데이터 미리보기 (치킨 점포수 및 시간대별 유동인구)')
+    display_cols = ['기준년분기명', '상권구분코드명', '상권코드명', '점포수'] + time_columns
+    st.dataframe(final_filtered_df[display_cols].iloc[:1]) # 첫 번째 행만 보여줌
+    st.markdown("*(위 데이터는 선택된 상권의 치킨 점포수와 시간대별 유동인구를 보여줍니다)*")
+
 else:
-    st.info("시각화를 위해 CSV 파일을 업로드해주세요.")
+    st.warning("선택된 상권에 해당하는 치킨 점포수 데이터가 없습니다. 다른 상권을 선택해주세요.")
 
-# --- 데이터가 성공적으로 로드된 경우에만 시각화 및 분석 수행 ---
-if df is not None:
-    st.header('📊 데이터 미리보기')
-    # 데이터셋 출처 컬럼도 함께 표시
-    st.dataframe(df)
-
-    # --- 분석 섹션 ---
-    st.header('🔍 데이터 분석')
-
-    # 상관관계 분석
-    st.subheader('상관관계 분석: 길단위인구수 vs. 치킨전문점 수')
-    # 여러 데이터셋이 합쳐졌으므로 전체 데이터에 대한 상관관계를 계산
-    correlation = df['길단위인구수'].corr(df['치킨전문점수'])
-    st.info(f"**전체 데이터셋에서 길단위인구수와 치킨전문점 수 간의 상관계수: {correlation:.2f}**")
-    if correlation > 0.7:
-        st.success("매우 강한 양의 상관관계가 있습니다. 유동인구가 많을수록 치킨전문점 수도 많아지는 경향이 뚜렷합니다.")
-    elif correlation > 0.3:
-        st.success("어느 정도 양의 상관관계가 있습니다. 유동인구가 많을수록 치킨전문점 수도 많아지는 경향이 있습니다.")
-    elif correlation < -0.7:
-        st.warning("매우 강한 음의 상관관계가 있습니다. 유동인구가 많을수록 치킨전문점 수가 적어지는 경향이 뚜렷합니다.")
-    elif correlation < -0.3:
-        st.warning("어느 정도 음의 상관관계가 있습니다. 유동인구가 많을수록 치킨전문점 수가 적어지는 경향이 있습니다.")
-    else:
-        st.info("상관관계가 약하거나 거의 없습니다. 유동인구와 치킨전문점 수 사이에 뚜렷한 선형 관계를 찾기 어렵습니다.")
-
-    st.markdown("---")
-
-    # 상위 N개 상권 선택 기능
-    st.subheader('상위 N개 상권 필터링')
-    col1, col2 = st.columns(2)
-    with col1:
-        sort_by = st.selectbox("정렬 기준", ['길단위인구수', '치킨전문점수'])
-    with col2:
-        top_n = st.slider("상위 N개 상권 선택", min_value=1, max_value=len(df), value=min(5, len(df)))
-
-    # 선택된 기준으로 데이터 정렬 및 상위 N개 추출
-    filtered_df = df.sort_values(by=sort_by, ascending=False).head(top_n)
-
-    st.write(f"**상위 {top_n}개 상권 (기준: {sort_by})**")
-    # 필터링된 데이터프레임에 데이터셋 출처도 포함하여 표시
-    st.dataframe(filtered_df)
-
-    # --- 시각화 ---
-    # 각 시각화에서 '데이터셋 출처'를 color로 사용하거나, facet_col로 분리하여 볼 수 있도록 옵션을 제공하면 더 유연해짐.
-    # 일단은 '상권명'에 데이터셋 출처를 결합하여 x축에 표시
-    df_plot = df.copy()
-    # 상권명이 중복될 경우를 대비하여 상권명과 데이터셋 출처를 합쳐 고유한 레이블 생성
-    df_plot['상권명_출처'] = df_plot['상권명'] + ' (' + df_plot['데이터셋 출처'].str.replace('.csv', '', regex=False) + ')'
-
-
-    st.header('📈 상권별 길단위인구수')
-    fig_population = px.bar(
-        df_plot.sort_values('길단위인구수', ascending=False),
-        x='상권명_출처', # 결합된 상권명_출처 사용
-        y='길단위인구수',
-        title='상권별 길단위인구수 분포',
-        labels={'상권명_출처': '상권명 (데이터셋 출처)', '길단위인구수': '길단위인구수'},
-        color='길단위인구수',
-        color_continuous_scale=px.colors.sequential.Plasma,
-        hover_name='상권명' # 원래 상권명은 hover_name으로
-    )
-    fig_population.update_layout(xaxis_title="상권명 (데이터셋 출처)", yaxis_title="길단위인구수")
-    st.plotly_chart(fig_population, use_container_width=True)
-
-    st.header('🐔 상권별 치킨전문점 수')
-    fig_chicken = px.bar(
-        df_plot.sort_values('치킨전문점수', ascending=False),
-        x='상권명_출처', # 결합된 상권명_출처 사용
-        y='치킨전문점수',
-        title='상권별 치킨전문점 수 분포',
-        labels={'상권명_출처': '상권명 (데이터셋 출처)', '치킨전문점수': '치킨전문점수'},
-        color='치킨전문점수',
-        color_continuous_scale=px.colors.sequential.Viridis,
-        hover_name='상권명'
-    )
-    fig_chicken.update_layout(xaxis_title="상권명 (데이터셋 출처)", yaxis_title="치킨전문점수")
-    st.plotly_chart(fig_chicken, use_container_width=True)
-
-    st.header('👥🐔 길단위인구수와 치킨전문점 수 비교 (산점도)')
-    fig_scatter = px.scatter(
-        df_plot, # df_plot 사용
-        x='길단위인구수',
-        y='치킨전문점수',
-        size='길단위인구수',
-        color='데이터셋 출처', # 데이터셋 출처별로 색상 구분
-        hover_name='상권명_출처', # 상권명_출처를 hover_name으로
-        title='길단위인구수와 치킨전문점 수의 관계',
-        labels={'길단위인구수': '길단위인구수', '치킨전문점수': '치킨전문점수'},
-        log_x=False,
-        size_max=60
-    )
-    fig_scatter.update_layout(xaxis_title="길단위인구수", yaxis_title="치킨전문점수")
-    st.plotly_chart(fig_scatter, use_container_width=True)
-
-    st.markdown("""
-    ### 💡 분석 가이드 및 인사이트
-    * **상관관계 계수**: 길단위인구수와 치킨전문점 수 사이의 선형적인 관계 강도와 방향을 나타냅니다.
-        * 1에 가까울수록 양의 선형 관계 (하나가 증가하면 다른 하나도 증가)
-        * -1에 가까울수록 음의 선형 관계 (하나가 증가하면 다른 하나는 감소)
-        * 0에 가까울수록 선형 관계 없음
-    * **상위 N개 상권 필터링**: 특정 기준(유동인구 또는 치킨전문점 수)으로 가장 활발하거나 특정 업종이 많은 상권을 빠르게 식별할 수 있습니다.
-    * **산점도**: 유동인구 대비 치킨전문점 수가 예상보다 많거나 적은 '이상치' 상권을 찾아내는 데 유용합니다. 이는 새로운 시장 기회나 경쟁 과열 지역을 시사할 수 있습니다.
-    * **여러 데이터셋 분석**: 여러 CSV 파일을 업로드하여 통합된 데이터셋에서 분석을 수행할 수 있습니다. 산점도에서는 각 데이터셋의 출처별로 색상이 구분되어 시각적으로 비교하기 용이합니다.
-    """)
 
 st.markdown("""
-### 📝 코드 사용법
-1.  위 코드를 `app.py`와 같은 이름의 Python 파일로 저장합니다.
-2.  터미널 또는 명령 프롬프트에서 다음 명령어를 실행하여 필요한 라이브러리를 설치합니다:
-    ```bash
-    pip install streamlit pandas plotly
-    ```
-3.  저장한 파일이 있는 디렉토리에서 다음 명령어를 실행하여 스트림릿 앱을 시작합니다:
-    ```bash
-    streamlit run app.py
-    ```
-    명령어 실행 후 웹 브라우저에서 자동으로 앱이 열릴 것입니다.
+---
+### 분석 개요
+이 애플리케이션은 사용자가 선택한 상권의 치킨 점포수와 시간대별 유동인구 데이터를 분석하여,
+유동인구 대비 치킨 점포수의 비율을 시각화합니다.
+이를 통해 특정 시간대에 유동인구가 많은 상권에서 치킨 점포의 밀집도를 파악할 수 있습니다.
 
-**데이터 형식**: 업로드할 CSV 파일은 반드시 `상권명`, `길단위인구수`, `치킨전문점수`라는 컬럼 이름을 포함해야 하며, `길단위인구수`와 `치킨전문점수`는 숫자 형식이어야 합니다.
+**데이터 컬럼 설명 (가정):**
+* `기준년분기명`: 데이터의 기준이 되는 년도와 분기 (예: 2023_1)
+* `상권구분코드명`: 상권의 종류 (예: 골목상권, 발달상권)
+* `상권코드명`: 상권의 구체적인 이름 (예: 강남역, 홍대입구)
+* `점포수`: 해당 상권의 치킨 점포수
+* `시간대_X_유동인구_수`: 각 시간대별 유동인구 수 (예: 시간대_1_유동인구_수, 시간대_2_유동인구_수 등. 실제 데이터의 시간대 의미를 확인해주세요.)
 """)
