@@ -40,6 +40,36 @@ def preprocess_data(chicken_df, population_df):
     치킨 점포 데이터와 길단위 인구 데이터를 전처리하고 병합합니다.
     시간대별 인구당 점포수 비율을 계산합니다.
     """
+    # 디버깅을 위해 업로드된 데이터프레임의 컬럼명을 출력합니다.
+    st.write("---")
+    st.write("**업로드된 '점포-행정동' 데이터의 컬럼명:**", chicken_df.columns.tolist())
+    st.write("**업로드된 '길단위인구-행정동' 데이터의 컬럼명:**", population_df.columns.tolist())
+    st.write("---")
+
+    # 필요한 컬럼이 존재하는지 확인합니다.
+    required_chicken_cols = ['기준_년분기', '행정동_코', '행정동_코_명', '서비스_업종_코드_명', '점포수']
+    missing_chicken_cols = [col for col in required_chicken_cols if col not in chicken_df.columns]
+    if missing_chicken_cols:
+        st.error(f"'점포-행정동' 데이터에 다음 필수 컬럼이 누락되었습니다: {', '.join(missing_chicken_cols)}")
+        st.warning("데이터 파일의 컬럼명이 코드에서 예상하는 컬럼명과 일치하는지 확인해주세요.")
+        return None
+
+    required_population_cols = ['기준_년분기', '행정동_코', '행정동_코_명']
+    time_cols_prefix = '시간대_' # 시간대별 인구 컬럼 접두사
+    
+    missing_population_cols = [col for col in required_population_cols if col not in population_df.columns]
+    if missing_population_cols:
+        st.error(f"'길단위인구-행정동' 데이터에 다음 필수 컬럼이 누락되었습니다: {', '.join(missing_population_cols)}")
+        st.warning("데이터 파일의 컬럼명이 코드에서 예상하는 컬럼명과 일치하는지 확인해주세요.")
+        return None
+    
+    # 시간대 컬럼이 하나라도 있는지 확인
+    actual_time_cols = [col for col in population_df.columns if time_cols_prefix in col and '_생활인구_수' in col]
+    if not actual_time_cols:
+        st.error(f"'길단위인구-행정동' 데이터에 '시간대_'로 시작하고 '_생활인구_수'로 끝나는 시간대별 인구 컬럼이 없습니다.")
+        st.warning("데이터 파일의 시간대별 인구 컬럼명 형식이 올바른지 확인해주세요 (예: '시간대_00_06_생활인구_수').")
+        return None
+
     # 치킨 점포 데이터 전처리
     # '치킨' 또는 '닭강정' 등이 포함된 서비스 업종만 필터링합니다.
     # 실제 데이터의 '서비스_업종_코드_명' 컬럼 값에 따라 조정이 필요할 수 있습니다.
