@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import json
 
 # 데이터 로딩
-shop_df = pd.read_csv("서울시 상권분석서비스(점포-행정동).csv")
-pop_df = pd.read_csv("서울시 상권분석서비스(길단위인구-행정동).csv")
+shop_df = pd.read_csv("서울시 상권분석서비스(점포-행정동).csv", encoding='euc-kr')
+pop_df = pd.read_csv("서울시 상권분석서비스(길단위인구-행정동).csv", encoding='euc-kr')
 
 with open("서울시 상권분석서비스(영역-행정동).json", encoding="utf-8") as f:
     geo_data = json.load(f)
